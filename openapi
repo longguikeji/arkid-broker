@@ -1,0 +1,290 @@
+---
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: oneid
+  license:
+    name: MIT
+  contact:
+    name: longguikeji
+    email: api@longguikeji.com
+    url: https://longguikeji.com
+servers:
+- url: http://localhost:23701
+paths:
+  "/siteapi/v1/user/":
+    get:
+      operationId: getUserList
+      summary: 返回用户列表
+      parameters:
+      - name: limit
+        in: query
+        description: How many items to return at one time (max 100)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          title: 返回的数据量
+      responses:
+        '200':
+          description: A paged array of users
+          content:
+            application/json:
+              schema:
+                title: 请求结果
+                type: object
+                properties:
+                  status:
+                    title: 请求状态
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        title: '状态码'
+                      message:
+                        type: string
+                        title: '状态码说明'
+                    enum:
+                      - code: 0
+                        message: 请求成功
+                      - code: 401
+                        message: 无效的身份凭证
+                      - code: 403
+                        message: 权限不足
+                  result:
+                    title: 一批用户
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Employee"
+
+  "/siteapi/v1/ucenter/login/":
+    post:
+      operationId: userLogin
+      summary: 登录以获取token
+      requestBody:
+        description: 身份凭证...
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              title: 身份凭证
+              type: object
+              properties:
+                username:
+                  type: string
+                  title: 用户名
+                password:
+                  type: string
+                  title: 密码
+      responses:
+        '200':
+          description: login successfully
+          content:
+            application/json:
+              schema:
+                title: 请求结果
+                type: object
+                properties:
+                  status:
+                    title: 请求状态
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        title: '状态码'
+                      message:
+                        type: string
+                        title: '状态码说明'
+                    enum:
+                      - code: 0
+                        message: 登录成功
+                      - code: 400
+                        message: 用户名密码错误
+                  result:
+                    type: object
+                    title: 登录成功
+                    properties:
+                      token:
+                        type: string
+                        title: 身份凭证
+                      username:
+                        type: string
+                        title: 用户名
+                      name:
+                        type: string
+                        title: 姓名
+                      email:
+                        type: string
+                        title: 邮箱
+                      mobile:
+                        type: string
+                        title: 手机
+  "/siteapi/v1/auth/token/":
+    get:
+      operationId: authToken
+      summary: 校验用户token
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: get user info with perms
+          content:
+            application/json:
+              schema:
+                title: 请求结果
+                type: object
+                properties:
+                  status:
+                    title: 请求状态
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        title: '状态码'
+                      message:
+                        type: string
+                        title: '状态码说明'
+                    enum:
+                      - code: 0
+                        message: 认证成功
+                      - code: 401
+                        message: Token无效或未提供
+                      - code: 403
+                        message: 该Token权限不足
+                  result:
+                    type: object
+                    title: 用户信息
+                    properties:
+                      username:
+                        type: string
+                        title: 用户名
+                      name:
+                        type: string
+                        title: 姓名
+                      email:
+                        type: string
+                        title: 邮箱
+                      mobile:
+                        type: string
+                        title: 手机
+  "/siteapi/v1/user/{username}/":
+    get:
+      operationId: getUserDetail
+      summary: 查询用户信息
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+            title: 用户唯一标识
+      responses:
+        "200":
+          description: 用户信息
+          content:
+            application/json:
+              schema:
+                title: 请求结果
+                type: object
+                properties:
+                  status:
+                    title: 请求状态
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        title: '状态码'
+                      message:
+                        type: string
+                        title: '状态码说明'
+                    enum:
+                      - code: 0
+                        message: 请求成功
+                      - code: 404
+                        message: 该用户不存在
+                  result:
+                    $ref: '#/components/schemas/Employee'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+  schemas:
+    User:
+      title: 用户
+      type: object
+      properties:
+        username:
+          title: 用户唯一标识
+          type: string
+        name:
+          type: string
+          title: 姓名
+        email:
+          type: string
+          title: 邮箱
+        mobile:
+          type: string
+          title: 手机号
+        ding_user:
+          $ref: "#/components/schemas/DingUser"
+    DingUser:
+      title: 钉钉账户信息
+      type: object
+      properties:
+        uid:
+          title: 钉钉内用户唯一标识(userId)
+          type: string
+        account:
+          title: 钉钉账号(一般为手机号)
+          type: string
+    Employee:
+      title: 员工信息
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        groups:
+          title: 员工所属组
+          type: array
+          items:
+            $ref: "/components/schemas/Group"
+        depts:
+          title: 员工所属部门
+          type: array
+          items:
+            $ref: "/components/schemas/Dept"
+        group_uids:
+          title: 员工所属组的唯一标识
+          type: array
+          items:
+            title: 组的唯一标识
+            type: string
+        dept_uids:
+          title: 员工所属部门的唯一标识
+          type: array
+          items:
+            title: 部门的唯一标识
+            type: string
+    Group:
+      title: 组信息
+      type: object
+      properties:
+        uid:
+          type: string
+          title: 组唯一标识
+        name:
+          type: string
+          title: 组名称
+    Dept:
+      title: 部门信息
+      type: object
+      properties:
+        uid:
+          type: string
+          title: 部门唯一标识
+        name:
+          type: string
+          title: 部门名称
