@@ -1,7 +1,7 @@
 package oneid
 
 import (
-    broker "github.com/rockl2e/ark-apisvr/broker"
+    broker "github.com/longguikeji/arkid-broker/base_broker"
     handler "github.com/longguikeji/arkid-broker/handler"
 
     "github.com/gorilla/mux"
