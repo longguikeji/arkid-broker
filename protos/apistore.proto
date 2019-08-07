@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+message OpenAPI {
+  string content = 1;
+}
+
+message CreateAPIRes {
+  string code = 1;
+  string msg = 2;
+  API    API = 3;
+}
+
+
+message API {
+  string APIID = 1;
+  string name = 2;
+  string version = 3;
+  repeated Method methods = 4;
+  repeated Ref schemas = 5;
+  repeated Server servers = 6;
+  string title = 7;
+}
+
+message Server {
+  string url = 1;
+  map<string, string> description = 2;
+    // {
+    //   "instanceID": string,
+    //   "instanceName": string,
+    // }
+
+}
+
+message Method {
+  string methodID = 1;
+  string name = 2;
+  string description = 3;
+  Data data = 4;    // JSON - Data {params, retrun}
+  repeated string refNames = 5;
+}
+
+message Data {
+  string params = 1;  // list of JSONSchema
+  string return = 2; // JSONSchema
+}
+
+message Ref {
+  string name = 1;
+  string schema = 2; // JSONSchema
+}
+
+
+service APIStore {
+
+  // 导入API
+  rpc CreateAPI(OpenAPI) returns (CreateAPIRes) {
+    option (google.api.http) = {
+      post: "/v1/apis"
+      body: "*"
+    };
+  }
+}
